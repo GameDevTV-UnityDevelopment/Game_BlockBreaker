@@ -2,53 +2,75 @@
 
 public class Ball : MonoBehaviour
 {
+    [SerializeField]
     private Paddle paddle;
-    private bool hasStarted = false;
-    private Vector3 paddleToBallVector;
 
-    /// <summary>
-    /// Initialisation
-    /// </summary>
-    void Start()
+    [SerializeField]
+    private float xPush = 2f;
+
+    [SerializeField]
+    private float yPush = 15f;
+
+    [SerializeField]
+    private AudioClip[] ballSounds;
+
+    [SerializeField]
+    private float randomFactor = 0.2f;
+
+    private Vector2 paddleToBall;
+    private bool hasStarted = false;
+
+    private AudioSource audioSource;
+    private Rigidbody2D rigidBody2D;
+
+
+    private void Start()
     {
-        paddle = GameObject.FindObjectOfType<Paddle>();
-        paddleToBallVector = this.transform.position - paddle.transform.position;
+        paddleToBall = transform.position - paddle.transform.position;
+
+        audioSource = GetComponent<AudioSource>();
+        rigidBody2D = GetComponent<Rigidbody2D>();
     }
 
-    /// <summary>
-    /// Update is called once per frame
-    /// </summary>
-    void Update()
+    private void Update()
     {
         if (!hasStarted)
         {
-            // lock the ball relative to the paddle
-            this.transform.position = paddle.transform.position + paddleToBallVector;
-
-            // wait for a mouse click to launch
-            if (Input.GetMouseButtonDown(0))
-            {
-                Debug.Log("Mouse clicked, launch ball");
-
-                hasStarted = true;
-                this.GetComponent<Rigidbody2D>().velocity = new Vector2(2f, 10f);
-            }
+            LockBallToPaddle();
+            LaunchOnMouseClick();
         }
     }
 
-    /// <summary>
-    /// Event handler for collision between the ball and other game objects
-    /// </summary>
-    /// <param name="collision">The Collision2D data associated with this collision</param>
+    private void LockBallToPaddle()
+    {
+        Vector2 paddlePosition = new Vector2(paddle.transform.position.x, paddle.transform.position.y);
+
+        transform.position = paddlePosition + paddleToBall;
+    }
+
+    private void LaunchOnMouseClick()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            hasStarted = true;
+
+            rigidBody2D.velocity = new Vector2(xPush, yPush);
+        }
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        Vector2 tweak = new Vector2(Random.Range(0.2f, 0.2f), Random.Range(0.2f, 0.2f));
+        float randomX = Random.Range(0f, randomFactor);
+        float randomY = Random.Range(0f, randomFactor);
+
+        Vector2 velocityTweak = new Vector2(randomX, randomY);
 
         if (hasStarted)
         {
-            this.GetComponent<AudioSource>().Play();
+            AudioClip clip = ballSounds[Random.Range(0, ballSounds.Length)];
+            audioSource.PlayOneShot(clip);
 
-            this.GetComponent<Rigidbody2D>().velocity += tweak;
+            rigidBody2D.velocity += velocityTweak;
         }
     }
 }

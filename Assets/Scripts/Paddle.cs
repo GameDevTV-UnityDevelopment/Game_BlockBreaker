@@ -2,60 +2,42 @@
 
 public class Paddle : MonoBehaviour
 {
-    public float minX;
-    public float maxX;
-    public bool autoPlay = false;
+    [SerializeField]
+    private float screenWidthInUnits = 16f;
 
+    [SerializeField]
+    private float minPositionX = 1f;
+
+    [SerializeField]
+    private float maxPositionX = 15f;
+
+    private GameSession gameSession;
     private Ball ball;
 
-    /// <summary>
-    /// Initialisation
-    /// </summary>
+
     private void Start()
     {
-        ball = GameObject.FindObjectOfType<Ball>();
+        gameSession = FindObjectOfType<GameSession>();
+        ball = FindObjectOfType<Ball>();
     }
 
-    /// <summary>
-    /// Update is called once per frame
-    /// </summary>
-    void Update()
+    private void Update()
     {
-        if(!autoPlay)
+        Vector2 paddlePosition = new Vector2(transform.position.x, transform.position.y);
+        paddlePosition.x = Mathf.Clamp(GetXPosition(), minPositionX, maxPositionX);
+
+        transform.position = paddlePosition;
+    }
+
+    private float GetXPosition()
+    {
+        if (gameSession.IsAutoPlayEnabled())
         {
-            MoveWithMouse();
+            return ball.transform.position.x;
         }
         else
         {
-            AutoPlay();
+            return (Input.mousePosition.x / Screen.width) * screenWidthInUnits;
         }
-    }
-
-    /// <summary>
-    /// Moves the paddle with the mouse
-    /// </summary>
-    private void MoveWithMouse()
-    {
-        Vector3 paddlePos = new Vector3(0.5f, this.transform.position.y, 0f);
-
-        float mousePosInBlock = Input.mousePosition.x / Screen.width * 16;
-
-        paddlePos.x = Mathf.Clamp(mousePosInBlock, minX, maxX);
-
-        this.transform.position = paddlePos;
-    }
-
-    /// <summary>
-    /// Moves the paddle automatically
-    /// </summary>
-    private void AutoPlay()
-    {
-        Vector3 paddlePos = new Vector3(0.5f, this.transform.position.y, 0f);
-
-        Vector3 ballPos = ball.transform.position;        
-
-        paddlePos.x = Mathf.Clamp(ballPos.x, minX, maxX);
-
-        this.transform.position = paddlePos;
     }
 }
